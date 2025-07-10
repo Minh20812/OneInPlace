@@ -159,16 +159,12 @@
   }
 }
 
-@layer components {
-  .btn-primary {
-    @apply bg-brown text-cream hover:bg-brown/90 px-6 py-3 rounded-lg font-medium transition-colors;
+@layer utilities {
+  .bento-shadow {
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
   }
 
-  .btn-secondary {
-    @apply bg-pink text-brown hover:bg-pink/90 px-6 py-3 rounded-lg font-medium transition-colors;
-  }
-
-  .btn-outline {
-    @apply border-2 border-brown text-brown hover:bg-brown/10 px-6 py-3 rounded-lg font-medium transition-colors;
+  .bento-hover-shadow {
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08);
   }
 }
