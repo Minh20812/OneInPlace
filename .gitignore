@@ -25,3 +25,5 @@ dist-ssr
 
 .env
 .env.local
+.continue/rules/new-rule-1.md
+.continue/rules/new-rule.md

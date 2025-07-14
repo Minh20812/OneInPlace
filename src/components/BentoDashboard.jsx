@@ -1,199 +1,167 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Youtube,
   Monitor,
   Beaker,
-  Gamepad2,
   TrendingUp,
-  BookOpen,
-  Music,
-  Plane,
+  Film,
+  Atom,
+  Rocket,
+  Leaf,
+  FlaskConical,
+  Briefcase,
+  BarChart3,
+  Brain,
+  Map,
+  Globe,
+  Newspaper,
+  BrainCircuit,
+  Network,
+  Dna,
+  PawPrint,
 } from "lucide-react";
 import YouTubeBento from "./YouTubeBento";
 import CategoryBento from "./CategoryBento";
+import { Header } from "./Header";
+import { Footer } from "./Footer";
+import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
+import { db } from "../utils/firebase.js";
+import { getTimeAgo } from "../utils/date.js";
 
-const categories = [
-  {
-    id: "tech",
-    title: "Tech News",
-    icon: Monitor,
-    color: "text-blue-600",
-    bgColor: "bg-blue-50",
-    content: [
-      {
-        title: "OpenAI Launches GPT-5",
-        source: "TechCrunch",
-        time: "2 hours ago",
-        thumbnail:
-          "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=300&h=200&fit=crop",
-      },
-      {
-        title: "Apple Vision Pro Update",
-        source: "The Verge",
-        time: "4 hours ago",
-        thumbnail:
-          "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=300&h=200&fit=crop",
-      },
-      {
-        title: "Meta AI Breakthrough",
-        source: "Wired",
-        time: "6 hours ago",
-        thumbnail:
-          "https://images.unsplash.com/photo-1677756119517-756a188d2d94?w=300&h=200&fit=crop",
-      },
-    ],
-  },
-  {
-    id: "science",
-    title: "Science News",
-    icon: Beaker,
-    color: "text-green-600",
-    bgColor: "bg-green-50",
-    content: [
-      {
-        title: "New Mars Discovery",
-        source: "NASA",
-        time: "1 hour ago",
-        thumbnail:
-          "https://images.unsplash.com/photo-1614728894747-a83421adfc4e?w=300&h=200&fit=crop",
-      },
-      {
-        title: "Quantum Computing Advance",
-        source: "Nature",
-        time: "3 hours ago",
-        thumbnail:
-          "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=300&h=200&fit=crop",
-      },
-      {
-        title: "Climate Change Study",
-        source: "Science",
-        time: "5 hours ago",
-        thumbnail:
-          "https://images.unsplash.com/photo-1569163139394-de4e4f43e4e5?w=300&h=200&fit=crop",
-      },
-    ],
-  },
-  {
-    id: "gaming",
-    title: "Game News",
-    icon: Gamepad2,
-    color: "text-purple-600",
-    bgColor: "bg-purple-50",
-    content: [
-      {
-        title: "New PlayStation Exclusive",
-        source: "IGN",
-        time: "30 minutes ago",
-        thumbnail:
-          "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=300&h=200&fit=crop",
-      },
-      {
-        title: "Steam Deck Updates",
-        source: "GameSpot",
-        time: "2 hours ago",
-        thumbnail:
-          "https://images.unsplash.com/photo-1606092195730-5d7b9af1efc5?w=300&h=200&fit=crop",
-      },
-      {
-        title: "Indie Game Awards",
-        source: "Polygon",
-        time: "4 hours ago",
-        thumbnail:
-          "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=300&h=200&fit=crop",
-      },
-    ],
-  },
-  {
-    id: "business",
-    title: "Business",
-    icon: TrendingUp,
-    color: "text-orange-600",
-    bgColor: "bg-orange-50",
-    content: [
-      {
-        title: "Stock Market Rally",
-        source: "Bloomberg",
-        time: "1 hour ago",
-        thumbnail:
-          "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=300&h=200&fit=crop",
-      },
-      {
-        title: "Startup Funding Round",
-        source: "TechCrunch",
-        time: "3 hours ago",
-        thumbnail:
-          "https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=300&h=200&fit=crop",
-      },
-      {
-        title: "Economic Forecast",
-        source: "Forbes",
-        time: "5 hours ago",
-        thumbnail:
-          "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=300&h=200&fit=crop",
-      },
-    ],
-  },
-  {
-    id: "education",
-    title: "Education",
-    icon: BookOpen,
-    color: "text-indigo-600",
-    bgColor: "bg-indigo-50",
-    content: [
-      {
-        title: "Online Learning Trends",
-        source: "EdTech Hub",
-        time: "2 hours ago",
-        thumbnail:
-          "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=300&h=200&fit=crop",
-      },
-      {
-        title: "University Rankings",
-        source: "Times Higher Ed",
-        time: "4 hours ago",
-        thumbnail:
-          "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=300&h=200&fit=crop",
-      },
-      {
-        title: "STEM Education Reform",
-        source: "Education Week",
-        time: "6 hours ago",
-        thumbnail:
-          "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=300&h=200&fit=crop",
-      },
-    ],
-  },
-  {
-    id: "music",
-    title: "Music",
-    icon: Music,
-    color: "text-pink-600",
-    bgColor: "bg-pink-50",
-    content: [
-      {
-        title: "Grammy Winners 2024",
-        source: "Rolling Stone",
-        time: "1 hour ago",
-        thumbnail:
-          "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=200&fit=crop",
-      },
-      {
-        title: "New Album Releases",
-        source: "Pitchfork",
-        time: "3 hours ago",
-        thumbnail:
-          "https://images.unsplash.com/photo-1471478331149-c72f17e33c73?w=300&h=200&fit=crop",
-      },
-      {
-        title: "Concert Tour Dates",
-        source: "Billboard",
-        time: "5 hours ago",
-        thumbnail:
-          "https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?w=300&h=200&fit=crop",
-      },
-    ],
-  },
-];
+// Helper functions để map icon và color cho từng category
+const getIconByCategory = (categoryId) => {
+  const iconMap = {
+    vn_congnghe_ai: Brain,
+    vn_vietnam: Map,
+    vn_thegioi: Globe,
+    vnexpress: Newspaper,
+
+    en_technology_computing: Monitor,
+    en_technology_internet: Network,
+    en_technology_ai: BrainCircuit,
+
+    en_science_genetics: Dna,
+    en_science_physics: Atom,
+    en_science_space: Rocket,
+    en_science_environment: Leaf,
+    en_science_wildlife: PawPrint,
+    en_science_latest: FlaskConical,
+
+    en_entertainment_movies: Film,
+
+    en_business_entrepreneurship: Briefcase,
+    en_business_markets: BarChart3,
+    en_world: Globe,
+
+    hackernews: TrendingUp,
+  };
+  return iconMap[categoryId] || Beaker;
+};
+
+const getColor = (categoryId) => {
+  const colorMap = {
+    // Vietnamese
+    vn_congnghe_ai: "text-purple-600",
+    vn_vietnam: "text-red-600",
+    vn_thegioi: "text-blue-600",
+    vnexpress: "text-neutral-600",
+
+    // English - Technology
+    en_technology_computing: "text-blue-600",
+    en_technology_internet: "text-sky-600",
+    en_technology_ai: "text-purple-600",
+
+    // English - Science
+    en_science_genetics: "text-green-600",
+    en_science_physics: "text-cyan-600",
+    en_science_space: "text-indigo-600",
+    en_science_environment: "text-emerald-600",
+    en_science_wildlife: "text-lime-600",
+    en_science_latest: "text-teal-600",
+
+    // Entertainment
+    en_entertainment_movies: "text-red-600",
+
+    // Business
+    en_business_entrepreneurship: "text-orange-600",
+    en_business_markets: "text-yellow-600",
+
+    // World / News
+    en_world: "text-blue-600",
+    hackernews: "text-amber-600",
+  };
+  return colorMap[categoryId] || "text-gray-600";
+};
+
+const getBgColor = (categoryId) => {
+  const bgColorMap = {
+    // Vietnamese
+    vn_congnghe_ai: "bg-purple-50",
+    vn_vietnam: "bg-red-50",
+    vn_thegioi: "bg-blue-50",
+    vnexpress: "bg-neutral-50",
+
+    // English - Technology
+    en_technology_computing: "bg-blue-50",
+    en_technology_internet: "bg-sky-50",
+    en_technology_ai: "bg-purple-50",
+
+    // English - Science
+    en_science_genetics: "bg-green-50",
+    en_science_physics: "bg-cyan-50",
+    en_science_space: "bg-indigo-50",
+    en_science_environment: "bg-emerald-50",
+    en_science_wildlife: "bg-lime-50",
+    en_science_latest: "bg-teal-50",
+
+    // Entertainment
+    en_entertainment_movies: "bg-red-50",
+
+    // Business
+    en_business_entrepreneurship: "bg-orange-50",
+    en_business_markets: "bg-yellow-50",
+
+    // World / News
+    en_world: "bg-blue-50",
+    hackernews: "bg-amber-50",
+  };
+  return bgColorMap[categoryId] || "bg-gray-50";
+};
+
+const getCategoryTitle = (categoryId) => {
+  const titleMap = {
+    // 🇻🇳 Vietnamese categories
+    vn_congnghe_ai: "🤖 AI VN",
+    vn_vietnam: "🇻🇳 Việt Nam",
+    vn_thegioi: "🌍 Thế giới",
+    vnexpress: "📰 VnExpress",
+
+    // 💻 Tech
+    en_technology_computing: "💻 Computing",
+    en_technology_internet: "🌐 Internet",
+    en_technology_ai: "🧠 AI",
+
+    // 🔬 Science
+    en_science_genetics: "🧬 Genetics",
+    en_science_physics: "⚛️ Physics",
+    en_science_space: "🚀 Space",
+    en_science_environment: "🌱 Enviro",
+    en_science_wildlife: "🐾 Wildlife",
+    en_science_latest: "🧪 Science+",
+
+    // 🎬 Entertainment
+    en_entertainment_movies: "🎬 Movies",
+
+    // 💼 Business
+    en_business_entrepreneurship: "💡 Startup",
+    en_business_markets: "📈 Markets",
+
+    // 🌐 General
+    en_world: "🌍 World",
+    hackernews: "💻 HackerNews",
+  };
+  return titleMap[categoryId] || "📁 Mục khác";
+};
 
 const youtubeVideos = [
   {
@@ -251,80 +219,238 @@ const youtubeVideos = [
 const BentoDashboard = () => {
   const [activeCategory, setActiveCategory] = useState("youtube");
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [categoriesData, setCategoriesData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const handleCategoryClick = (categoryId) => {
     if (categoryId === activeCategory || isAnimating) return;
 
     setIsAnimating(true);
+    setIsMobileMenuOpen(false);
     setTimeout(() => {
       setActiveCategory(categoryId);
       setIsAnimating(false);
     }, 300);
   };
 
-  const activeData =
-    activeCategory === "youtube"
-      ? {
-          title: "Latest YouTube Videos",
-          content: youtubeVideos,
-          isYoutube: true,
-        }
-      : categories.find((c) => c.id === activeCategory);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const categoryIds = [
+          "vn_congnghe_ai",
+          "vn_vietnam",
+          "vn_thegioi",
+          "vnexpress",
+          "en_technology_computing",
+          "en_technology_internet",
+          "en_technology_ai",
+          "en_science_genetics",
+          "en_science_physics",
+          "en_science_space",
+          "en_science_environment",
+          "en_science_wildlife",
+          "en_science_latest",
+          "en_entertainment_movies",
+          "en_business_entrepreneurship",
+          "en_business_markets",
+          "en_world",
+          "hackernews",
+        ];
+
+        const promises = categoryIds.map(async (id) => {
+          try {
+            const q = query(
+              collection(db, id),
+              orderBy("pubDate", "desc")
+              // limit(10)
+            );
+            const snapshot = await getDocs(q);
+            const content = snapshot.docs.map((doc) => {
+              const data = doc.data();
+              return {
+                title: data.title,
+                time: getTimeAgo(data.pubDate),
+                link: data.link,
+                source: data.source || "Unknown Source",
+                pubDate: data.pubDate,
+              };
+            });
+
+            return {
+              id,
+              title: getCategoryTitle(id),
+              icon: getIconByCategory(id),
+              color: getColor(id),
+              bgColor: getBgColor(id),
+              content,
+            };
+          } catch (error) {
+            console.error(`Error fetching data for ${id}:`, error);
+            return {
+              id,
+              title: getCategoryTitle(id),
+              icon: getIconByCategory(id),
+              color: getColor(id),
+              bgColor: getBgColor(id),
+              content: [],
+            };
+          }
+        });
+
+        const results = await Promise.all(promises);
+        setCategoriesData(results);
+      } catch (error) {
+        console.error("Error fetching categories data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Tìm category data từ Firestore hoặc fallback
+  const getActiveData = () => {
+    if (activeCategory === "youtube") {
+      return {
+        title: "Latest YouTube Videos",
+        content: youtubeVideos,
+        isYoutube: true,
+      };
+    }
+
+    const firestoreCategory = categoriesData.find(
+      (c) => c.id === activeCategory
+    );
+    if (firestoreCategory) {
+      return firestoreCategory;
+    }
+
+    // Fallback nếu không tìm thấy data
+    return {
+      id: activeCategory,
+      title: getCategoryTitle(activeCategory),
+      icon: getIconByCategory(activeCategory),
+      color: getColor(activeCategory),
+      bgColor: getBgColor(activeCategory),
+      content: [],
+    };
+  };
+
+  const activeData = getActiveData();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Đang tải dữ liệu...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex gap-6 h-[calc(100vh-3rem)]">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 py-4">
+        <Header />
+
+        {/* Mobile Category Selector */}
+        <div className="lg:hidden mb-2">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-2">
+            <div className="flex items-center justify-center mb-2">
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="font-semibold text-gray-900"
+              >
+                {isMobileMenuOpen ? "Hide" : "Show"} Categories
+              </button>
+            </div>
+
+            {isMobileMenuOpen && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {activeCategory !== "youtube" && (
+                  <div
+                    className="bg-red-50 border-2 border-red-200 rounded-xl p-3 cursor-pointer transition-all duration-200 hover:shadow-md"
+                    onClick={() => handleCategoryClick("youtube")}
+                  >
+                    <div className="flex flex-col items-center text-center">
+                      <Youtube className="h-6 w-6 text-red-500 mb-2" />
+                      <span className="text-sm font-medium text-gray-900">
+                        YouTube
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {categoriesData
+                  .filter((category) => category.id !== activeCategory)
+                  .map((category) => (
+                    <div
+                      key={category.id}
+                      className={`${category.bgColor} rounded-xl p-3 cursor-pointer transition-all duration-200 hover:shadow-md`}
+                      onClick={() => handleCategoryClick(category.id)}
+                    >
+                      <div className="flex flex-col items-center text-center">
+                        <category.icon
+                          className={`h-6 w-6 ${category.color} mb-2`}
+                        />
+                        <span className="text-sm font-medium text-gray-900">
+                          {category.title}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Desktop/Tablet Layout */}
+        <div className="hidden lg:flex gap-6 h-[calc(100vh-9rem)]">
           {/* Left Side - Main Content */}
           <div
-            className={`transition-all duration-500 ease-in-out ${
+            className={`flex-1 transition-all duration-500 ease-in-out ${
               isAnimating
                 ? "opacity-0 translate-y-4"
                 : "opacity-100 translate-y-0"
             }`}
-            style={{ width: "50%" }}
           >
             {activeCategory === "youtube" ? (
               <YouTubeBento videos={youtubeVideos} isAnimating={isAnimating} />
             ) : (
-              <CategoryBento
-                category={
-                  categories.find((c) => c.id === activeCategory) ||
-                  categories[0]
-                }
-                isExpanded={true}
-                isAnimating={isAnimating}
-              />
+              <CategoryBento category={activeData} isAnimating={isAnimating} />
             )}
           </div>
 
           {/* Right Side - Category Grid */}
-          <div className="flex-1 grid grid-cols-2 gap-4 auto-rows-fr">
+          <div className="w-120 grid grid-cols-3 gap-4 auto-rows-fr">
             {activeCategory !== "youtube" && (
               <div
-                className={`bento-shadow bg-white border-2 border-red-500 rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:bento-hover-shadow hover:scale-105 ${
+                className={`bg-white border-2 border-red-500 rounded-2xl p-4 cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 ${
                   isAnimating ? "opacity-50" : "opacity-100"
                 }`}
                 onClick={() => handleCategoryClick("youtube")}
               >
                 <div className="flex flex-col items-center justify-center h-full text-center">
                   <Youtube className="h-8 w-8 text-red-500 mb-3" />
-                  <h3 className="text-lg font-semibold text-gray-900">
+                  <h3 className="text-base font-semibold text-gray-900">
                     YouTube
                   </h3>
-                  <p className="text-sm text-gray-500 mt-1">Latest Videos</p>
                 </div>
               </div>
             )}
 
-            {categories
+            {categoriesData
               .filter((category) => category.id !== activeCategory)
               .map((category) => (
                 <div
                   key={category.id}
-                  className={`bento-shadow ${
+                  className={`${
                     category.bgColor
-                  } rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:bento-hover-shadow hover:scale-105 ${
+                  } rounded-2xl p-4 cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 ${
                     isAnimating ? "opacity-50" : "opacity-100"
                   }`}
                   onClick={() => handleCategoryClick(category.id)}
@@ -333,17 +459,36 @@ const BentoDashboard = () => {
                     <category.icon
                       className={`h-8 w-8 ${category.color} mb-3`}
                     />
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h3 className="text-base font-semibold text-gray-900">
                       {category.title}
                     </h3>
-                    <p className="text-sm text-gray-500 mt-1">
+                    {/* <p className="text-sm text-gray-500 mt-1">
                       {category.content.length} articles
-                    </p>
+                    </p> */}
                   </div>
                 </div>
               ))}
           </div>
         </div>
+
+        {/* Mobile/Tablet Content */}
+        <div className="lg:hidden">
+          <div
+            className={`transition-all duration-500 ease-in-out ${
+              isAnimating
+                ? "opacity-0 translate-y-4"
+                : "opacity-100 translate-y-0"
+            }`}
+          >
+            {activeCategory === "youtube" ? (
+              <YouTubeBento videos={youtubeVideos} isAnimating={isAnimating} />
+            ) : (
+              <CategoryBento category={activeData} isAnimating={isAnimating} />
+            )}
+          </div>
+        </div>
+
+        <Footer />
       </div>
     </div>
   );
