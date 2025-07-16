@@ -7,7 +7,6 @@ const CategoryBento = ({ category, isAnimating = false }) => {
     if (link) window.open(link, "_blank");
   };
 
-  // Function để get border color dựa trên category id
   const getBorderColor = (categoryId) => {
     const borderColorMap = {
       vn_congnghe_ai: "border-purple-500",
@@ -20,8 +19,29 @@ const CategoryBento = ({ category, isAnimating = false }) => {
       en_entertainment_movies: "border-red-500",
       en_business_entrepreneurship: "border-orange-500",
       en_business_markets: "border-yellow-500",
+      producthunt: "border-[#ff6154]",
     };
     return borderColorMap[categoryId] || "border-gray-500";
+  };
+
+  const getDomainFromUrl = (url) => {
+    try {
+      const urlObj = new URL(url);
+      let hostname = urlObj.hostname;
+      if (hostname.startsWith("www.")) {
+        hostname = hostname.substring(4);
+      }
+      return hostname;
+    } catch (error) {
+      return url;
+    }
+  };
+
+  const getSourceDisplay = (item) => {
+    if (!item.source || item.source.toLowerCase() === "unknown") {
+      return item.link ? getDomainFromUrl(item.link) : "Unknown";
+    }
+    return item.source;
   };
 
   return (
@@ -52,6 +72,44 @@ const CategoryBento = ({ category, isAnimating = false }) => {
             <p className="text-sm text-gray-400 mt-2">Vui lòng thử lại sau</p>
           </div>
         </div>
+      ) : category.id === "producthunt" ? (
+        <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+          {[...category.content]
+            .sort((a, b) => a.rank - b.rank)
+            .map((item, index) => (
+              <div
+                key={index}
+                onClick={() => handleClick(item.link)}
+                className="flex gap-4 p-4 rounded-xl hover:bg-gray-50 transition-all duration-300 cursor-pointer group border border-gray-200"
+              >
+                <img
+                  src={item.image}
+                  alt={item.title}
+                  className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+                />
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-gray-900 text-base group-hover:text-[#ff6154] transition-colors">
+                    #{item.rank} – {item.title}
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                    {item.description}
+                  </p>
+                  {item.topics?.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {item.topics.map((topic, i) => (
+                        <span
+                          key={i}
+                          className="bg-orange-100 text-orange-600 text-xs px-2 py-0.5 rounded-full"
+                        >
+                          {topic}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+        </div>
       ) : (
         <div className="flex-1 overflow-y-auto space-y-4 pr-2">
           {category.content.map((item, index) => (
@@ -76,7 +134,7 @@ const CategoryBento = ({ category, isAnimating = false }) => {
                     : item.title}
                 </h3>
                 <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                  <span>{item.source}</span>
+                  <span>{getSourceDisplay(item)}</span>
                   {item.time && (
                     <>
                       <span>•</span>
@@ -90,15 +148,12 @@ const CategoryBento = ({ category, isAnimating = false }) => {
                           if (!dateObj || isNaN(dateObj)) return "—";
 
                           const diff = Date.now() - dateObj.getTime();
-
                           const minutes = Math.floor(diff / 60000);
                           if (minutes < 1) return "just now";
                           if (minutes < 60) return `${minutes} min ago`;
-
                           const hours = Math.floor(minutes / 60);
                           if (hours < 24)
                             return `${hours} hour${hours > 1 ? "s" : ""} ago`;
-
                           const days = Math.floor(hours / 24);
                           return `${days} day${days > 1 ? "s" : ""} ago`;
                         })()}
@@ -131,7 +186,6 @@ const CategoryBento = ({ category, isAnimating = false }) => {
                 )}
               </div>
 
-              {/* Indicator cho external link */}
               <div className="flex-shrink-0 self-start mt-1">
                 <svg
                   className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transition-colors"

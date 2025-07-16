@@ -19,6 +19,7 @@ import {
   Network,
   Dna,
   PawPrint,
+  Zap,
 } from "lucide-react";
 import YouTubeBento from "./YouTubeBento";
 import CategoryBento from "./CategoryBento";
@@ -54,6 +55,7 @@ const getIconByCategory = (categoryId) => {
     en_world: Globe,
 
     hackernews: TrendingUp,
+    producthunt: Zap,
   };
   return iconMap[categoryId] || Beaker;
 };
@@ -89,6 +91,7 @@ const getColor = (categoryId) => {
     // World / News
     en_world: "text-blue-600",
     hackernews: "text-amber-600",
+    producthunt: "text-orange-500",
   };
   return colorMap[categoryId] || "text-gray-600";
 };
@@ -124,6 +127,7 @@ const getBgColor = (categoryId) => {
     // World / News
     en_world: "bg-blue-50",
     hackernews: "bg-amber-50",
+    producthunt: "bg-orange-50",
   };
   return bgColorMap[categoryId] || "bg-gray-50";
 };
@@ -159,6 +163,7 @@ const getCategoryTitle = (categoryId) => {
     // 🌐 General
     en_world: "🌍 World",
     hackernews: "💻 HackerNews",
+    producthunt: "ProductHunt",
   };
   return titleMap[categoryId] || "📁 Mục khác";
 };
@@ -257,18 +262,30 @@ const BentoDashboard = () => {
           "en_business_markets",
           "en_world",
           "hackernews",
+          "producthunt",
         ];
 
         const promises = categoryIds.map(async (id) => {
           try {
-            const q = query(
-              collection(db, id),
-              orderBy("pubDate", "desc")
-              // limit(10)
-            );
+            const q =
+              id === "producthunt"
+                ? query(collection(db, id), orderBy("rank", "asc"))
+                : query(collection(db, id), orderBy("pubDate", "desc"));
             const snapshot = await getDocs(q);
             const content = snapshot.docs.map((doc) => {
               const data = doc.data();
+
+              if (id === "producthunt") {
+                return {
+                  title: data.title,
+                  description: data.description,
+                  image: data.image,
+                  link: data.link,
+                  topics: data.topics || [],
+                  rank: data.rank || 999,
+                };
+              }
+
               return {
                 title: data.title,
                 time: getTimeAgo(data.pubDate),
