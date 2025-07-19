@@ -5,11 +5,24 @@ const Index = () => {
   useEffect(() => {
     const triggerCryptoUpdate = async () => {
       try {
-        const response = await fetch("/api/trigger-crypto-update", {
-          method: "POST",
-        });
+        const response = await fetch(
+          `https://api.github.com/repos/${import.meta.env.VITE_REPO_OWNER}/${
+            import.meta.env.VITE_REPO_NAME
+          }/dispatches`,
+          {
+            method: "POST",
+            headers: {
+              Accept: "application/vnd.github.v3+json",
+              Authorization: `token ${import.meta.env.VITE_PAT_TOKEN}`,
+            },
+            body: JSON.stringify({
+              event_type: "website_request",
+            }),
+          }
+        );
+
         if (!response.ok) {
-          throw new Error("Failed to trigger crypto update");
+          throw new Error("Failed to trigger workflow");
         }
       } catch (error) {
         console.error("Error triggering crypto update:", error);
@@ -18,6 +31,7 @@ const Index = () => {
 
     triggerCryptoUpdate();
   }, []);
+
   return <BentoDashboard />;
 };
 
