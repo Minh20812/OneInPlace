@@ -11,61 +11,22 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SettingsModal } from "@/components/SettingsModal";
-
-const tickerData = [
-  {
-    id: "1",
-    icon: <DollarSign className="w-3 h-3" />,
-    title: "Gold: $2,390",
-    subtitle: "+0.8%",
-    backgroundColor: "#FFF8DC",
-    textColor: "#B8860B",
-  },
-  {
-    id: "2",
-    icon: <Bitcoin className="w-3 h-3" />,
-    title: "BTC: $67,245",
-    subtitle: "+2.1%",
-    backgroundColor: "#FFE5B4",
-    textColor: "#FF8C00",
-  },
-  {
-    id: "3",
-    icon: <Coins className="w-3 h-3" />,
-    title: "ETH: $3,456",
-    subtitle: "+1.5%",
-    backgroundColor: "#E0F7FA",
-    textColor: "#00ACC1",
-  },
-  {
-    id: "4",
-    icon: <Newspaper className="w-3 h-3" />,
-    title: "Fed signals rate cuts",
-    subtitle: "2m",
-    backgroundColor: "#FFEBEE",
-    textColor: "#E91E63",
-  },
-  {
-    id: "5",
-    icon: <TrendingUp className="w-3 h-3" />,
-    title: "S&P: 4,567",
-    subtitle: "+0.3%",
-    backgroundColor: "#F3E5F5",
-    textColor: "#9C27B0",
-  },
-  {
-    id: "6",
-    icon: <BarChart3 className="w-3 h-3" />,
-    title: "NASDAQ: 14,234",
-    subtitle: "+0.7%",
-    backgroundColor: "#E3F2FD",
-    textColor: "#2196F3",
-  },
-];
+import { doc, onSnapshot } from "firebase/firestore";
+import { db } from "../utils/firebase";
 
 export function Header() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showSettings, setShowSettings] = useState(false);
+  const [cryptoData, setCryptoData] = useState({});
+  const [stockData, setStockData] = useState({});
+  const [goldData, setGoldData] = useState({
+    current_price: 2390,
+    change_percent: 0.8,
+    change: 0,
+    symbol: "XAU/USD",
+    name: "Spot Gold",
+  });
+  const [animationDuration, setAnimationDuration] = useState(60);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -92,8 +53,113 @@ export function Header() {
     });
   };
 
-  // Duplicate data for seamless loop
-  const duplicatedData = [...tickerData, ...tickerData];
+  useEffect(() => {
+    const unsubscribe = onSnapshot(
+      doc(db, "crypto & finance", "commodities"),
+      (doc) => {
+        if (doc.exists()) {
+          const docData = doc.data();
+          if (docData?.data?.GOLD) {
+            setGoldData({
+              current_price: docData.data.GOLD.current_price,
+              change_percent: docData.data.GOLD.change_percent,
+              change: docData.data.GOLD.change,
+              symbol: docData.data.GOLD.symbol,
+              name: docData.data.GOLD.name,
+            });
+          }
+        }
+      }
+    );
+
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(
+      doc(db, "crypto & finance", "cryptocurrencies"),
+      (doc) => {
+        if (doc.exists()) {
+          const docData = doc.data();
+          if (docData?.data) {
+            setCryptoData(docData.data);
+          }
+        }
+      }
+    );
+
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(
+      doc(db, "crypto & finance", "stock_indices"),
+      (doc) => {
+        if (doc.exists()) {
+          const docData = doc.data();
+          if (docData?.data) {
+            setStockData(docData.data);
+          }
+        }
+      }
+    );
+
+    return () => unsubscribe();
+  }, []);
+
+  const createTickerData = () => {
+    const baseData = [
+      {
+        id: "1",
+        icon: <DollarSign className="w-3 h-3 sm:w-4 sm:h-4" />,
+        title: `Gold: ${goldData.current_price.toLocaleString()}`,
+        subtitle: `${
+          goldData.change_percent >= 0 ? "+" : ""
+        }${goldData.change_percent.toFixed(2)}%`,
+        backgroundColor: "#FFF8DC",
+        textColor: "#B8860B",
+      },
+    ];
+
+    Object.entries(cryptoData)
+      .sort(([, a], [, b]) => a.rank - b.rank)
+      .forEach(([key, coin]) => {
+        baseData.push({
+          id: key,
+          icon: <Bitcoin className="w-3 h-3 sm:w-4 sm:h-4" />,
+          title: `${coin.symbol}: $${coin.current_price.toLocaleString()}`,
+          subtitle: `${
+            coin.change_percent >= 0 ? "+" : ""
+          }${coin.change_percent.toFixed(2)}%`,
+          backgroundColor: coin.change_percent >= 0 ? "#E8F5E8" : "#FFE5E5",
+          textColor: coin.change_percent >= 0 ? "#2E7D32" : "#D32F2F",
+        });
+      });
+
+    Object.entries(stockData).forEach(([key, stock]) => {
+      baseData.push({
+        id: key,
+        icon: <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" />,
+        title: `${stock.symbol}: ${stock.current_price.toLocaleString()}`,
+        subtitle: `${
+          stock.change_percent >= 0 ? "+" : ""
+        }${stock.change_percent.toFixed(2)}%`,
+        backgroundColor: stock.change_percent >= 0 ? "#E8F5E8" : "#FFE5E5",
+        textColor: stock.change_percent >= 0 ? "#2E7D32" : "#D32F2F",
+      });
+    });
+    return baseData;
+  };
+
+  const tickerData = createTickerData();
+
+  const duplicatedData = [...tickerData];
+
+  useEffect(() => {
+    const itemCount = tickerData.length;
+    const calculatedDuration = Math.max(20, Math.min(30, itemCount * 3));
+    setAnimationDuration(calculatedDuration);
+  }, [tickerData.length]);
 
   return (
     <div className="bg-white border-b border-gray-200 px-2 mx-auto sm:px-4 lg:px-6 py-2 rounded-2xl mb-2">
@@ -139,7 +205,10 @@ export function Header() {
         <div className="rounded-xl overflow-hidden relative">
           <div className="absolute left-0 top-0 w-4 h-full bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
           <div className="absolute right-0 top-0 w-4 h-full bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
-          <div className="flex animate-scroll-fast gap-1 py-1 px-2">
+          <div
+            className="flex animate-scroll-fast gap-1 py-1 px-2"
+            style={{ animationDuration: `${animationDuration}s` }}
+          >
             {duplicatedData.map((item, index) => (
               <div
                 key={`${item.id}-${index}`}
@@ -205,7 +274,10 @@ export function Header() {
             <div className="rounded-xl overflow-hidden relative">
               <div className="absolute left-0 top-0 w-4 h-full bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
               <div className="absolute right-0 top-0 w-4 h-full bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
-              <div className="flex animate-scroll-fast gap-1 py-1 px-2">
+              <div
+                className="flex animate-scroll-fast gap-1 py-1 px-2"
+                style={{ animationDuration: `${animationDuration}s` }}
+              >
                 {duplicatedData.map((item, index) => (
                   <div
                     key={`${item.id}-${index}`}
@@ -293,7 +365,10 @@ export function Header() {
             <div className="rounded-xl overflow-hidden relative">
               <div className="absolute left-0 top-0 w-6 h-full bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
               <div className="absolute right-0 top-0 w-6 h-full bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
-              <div className="flex animate-scroll-fast gap-2 py-1 px-3">
+              <div
+                className="flex animate-scroll-fast gap-2 py-1 px-3"
+                style={{ animationDuration: `${animationDuration}s` }}
+              >
                 {duplicatedData.map((item, index) => (
                   <div
                     key={`${item.id}-${index}`}
