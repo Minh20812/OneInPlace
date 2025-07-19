@@ -21,6 +21,10 @@ const Index = () => {
           }
         );
 
+        console.log("Response status:", response.status);
+        const data = await response.text();
+        console.log("Response data:", data);
+
         if (!response.ok) {
           throw new Error("Failed to trigger workflow");
         }
